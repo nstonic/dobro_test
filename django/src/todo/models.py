@@ -1,7 +1,8 @@
+from typing import NamedTuple
+
 from django.db import models
 from django.db.models import QuerySet
-
-from todo.statuses import ToDoStatuses, get_task_status
+from django.utils.timezone import now
 
 
 class Category(models.Model):
@@ -20,25 +21,28 @@ class Category(models.Model):
 
 class TaskQuerySet(QuerySet):
     def filter_by_status(self, status):
-        statuses = {
-            ToDoStatuses.EXPIRED: 'expired',
-            ToDoStatuses.DONE: 'done',
-            ToDoStatuses.ACTIVE: 'active',
-        }
         tasks_by_status = {
-            'expired': [],
-            'done': [],
-            'active': [],
+            key: list()
+            for key in Task.STATUSES.keys()
         }
         for task in self:
-            task_status = get_task_status(task)
-            status_key = statuses[task_status]
-            tasks_by_status[status_key].append(task.pk)
+            task_status = task.get_task_status()
+            tasks_by_status[task_status.value].append(task.pk)
 
         return self.filter(pk__in=tasks_by_status[status])
 
 
 class Task(models.Model):
+    class Status(NamedTuple):
+        value: str
+        verbose_name: str
+
+    STATUSES = {
+        'expired': Status('expired', 'Просрочено'),
+        'done': Status('done', 'Выполнено'),
+        'active': Status('active', 'В работе'),
+    }
+
     title = models.CharField(
         'Название',
         max_length=256,
@@ -75,3 +79,12 @@ class Task(models.Model):
         verbose_name = 'Задание'
         verbose_name_plural = 'Задания'
         ordering = ['-created_at']
+
+    def get_task_status(self) -> Status:
+        match self:
+            case self if self.done_at:
+                return self.STATUSES['done']
+            case self if self.complete_due and self.complete_due < now():
+                return self.STATUSES['expired']
+            case _:
+                return self.STATUSES['active']

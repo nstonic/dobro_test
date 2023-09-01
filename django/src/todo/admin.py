@@ -1,7 +1,6 @@
 from django.contrib import admin
 
-from todo.statuses import ToDoStatuses, get_task_status
-from todo.models import Task, Category, TaskQuerySet
+from .models import Task, Category, TaskQuerySet
 
 admin.site.register(Category)
 
@@ -11,11 +10,7 @@ class ToDoStatusFilter(admin.SimpleListFilter):
     parameter_name = 'status'
 
     def lookups(self, request, model_admin):
-        return (
-            ('expired', ToDoStatuses.EXPIRED.value),
-            ('done', ToDoStatuses.DONE.value),
-            ('active', ToDoStatuses.ACTIVE.value),
-        )
+        return Task.STATUSES.values()
 
     def queryset(self, request, qs: TaskQuerySet):
         if value := self.value():
@@ -26,6 +21,7 @@ class ToDoStatusFilter(admin.SimpleListFilter):
 class TaskAdmin(admin.ModelAdmin):
     list_display = [
         'title',
+        'category',
         'show_status',
         'complete_due',
     ]
@@ -47,7 +43,7 @@ class TaskAdmin(admin.ModelAdmin):
     ]
 
     def show_status(self, obj):
-        status = get_task_status(obj)
-        return status.value
+        status = obj.get_task_status()
+        return status.verbose_name
 
     show_status.short_description = 'Статус'
