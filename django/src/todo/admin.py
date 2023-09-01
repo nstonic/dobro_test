@@ -11,11 +11,12 @@ class TaskAdmin(admin.ModelAdmin):
         'title',
         'is_done',
     ]
-    readonly_fields = ['is_done', 'created_at']
+    readonly_fields = ['created_at']
     fields = [
         'title',
         'category',
         'created_at',
+        'complete_due',
         'done_at',
         'content'
     ]
