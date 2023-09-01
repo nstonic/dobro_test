@@ -1,4 +1,7 @@
 from django.db import models
+from django.db.models import QuerySet
+
+from todo.statuses import ToDoStatuses, get_task_status
 
 
 class Category(models.Model):
@@ -13,6 +16,26 @@ class Category(models.Model):
     class Meta:
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
+
+
+class TaskQuerySet(QuerySet):
+    def filter_by_status(self, status):
+        statuses = {
+            ToDoStatuses.EXPIRED: 'expired',
+            ToDoStatuses.DONE: 'done',
+            ToDoStatuses.ACTIVE: 'active',
+        }
+        tasks_by_status = {
+            'expired': [],
+            'done': [],
+            'active': [],
+        }
+        for task in self:
+            task_status = get_task_status(task)
+            status_key = statuses[task_status]
+            tasks_by_status[status_key].append(task.pk)
+
+        return self.filter(pk__in=tasks_by_status[status])
 
 
 class Task(models.Model):
@@ -46,6 +69,7 @@ class Task(models.Model):
         null=True,
         blank=True,
     )
+    objects = TaskQuerySet.as_manager()
 
     class Meta:
         verbose_name = 'Задание'
