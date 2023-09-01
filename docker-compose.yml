@@ -1,0 +1,31 @@
+version: '3'
+
+services:
+  postgres:
+    image: postgres:14.8
+    environment:
+      POSTGRES_PASSWORD: dobro
+      POSTGRES_USER: dobro
+      POSTGRES_DB: dobro
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./test_data:/test_data
+
+  django:
+    build:
+      context: ./django
+    env_file:
+    - .env
+    environment:
+      POSTGRES_URL: postgres://dobro:dobro@postgres:5432/dobro
+    command: bash -c "python3 manage.py runserver 0.0.0.0:8000"
+    restart: always
+    ports:
+      - 127.0.0.1:8000:8000
+    volumes:
+      - ./django/src:/opt/app/src/
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
