@@ -29,15 +29,31 @@ class TaskAdmin(admin.ModelAdmin):
         'created_at',
         'show_status',
     ]
-    fields = [
-        'title',
-        'show_status',
-        'category',
-        'created_at',
-        'complete_due',
-        'done_at',
-        'content',
+    fieldsets = [
+        [
+            None,
+            {
+                'fields': [
+                    'user',
+                    'title',
+                    'category',
+                    'show_status',
+                    'content',
+                ],
+            },
+        ],
+        (
+            'Сроки',
+            {
+                'fields': [
+                    'created_at',
+                    'complete_due',
+                    'done_at',
+                ],
+            },
+        ),
     ]
+
     list_filter = [
         ToDoStatusFilter,
     ]

@@ -1,5 +1,6 @@
 from typing import NamedTuple
 
+from django.contrib.auth.models import User
 from django.db import models
 from django.db.models import QuerySet
 from django.utils.timezone import now
@@ -73,7 +74,17 @@ class Task(models.Model):
         null=True,
         blank=True,
     )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='Пользователь',
+        related_name='tasks',
+        null=True
+    )
     objects = TaskQuerySet.as_manager()
+
+    def __str__(self):
+        return self.title
 
     class Meta:
         verbose_name = 'Задание'
