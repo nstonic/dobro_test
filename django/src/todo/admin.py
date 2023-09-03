@@ -56,6 +56,7 @@ class TaskAdmin(admin.ModelAdmin):
     ]
 
     list_filter = [
+        'category',
         ToDoStatusFilter,
     ]
 
