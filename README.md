@@ -25,7 +25,7 @@ $ docker compose build
 Накатите миграции:
 
 ```shell
-$ docker compose run --rm django manage.py migrate
+$ docker compose run --rm django python manage.py migrate
 ```
 
 Запустите докер-контейнеры:
