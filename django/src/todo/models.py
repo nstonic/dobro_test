@@ -74,12 +74,17 @@ class Task(models.Model):
         null=True,
         blank=True,
     )
+    file = models.FileField(
+        'Файл',
+        upload_to='media/',
+        null=True,
+        blank=True,
+    )
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         verbose_name='Пользователь',
         related_name='tasks',
-        null=True
     )
     objects = TaskQuerySet.as_manager()
 

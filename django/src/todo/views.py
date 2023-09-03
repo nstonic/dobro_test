@@ -17,6 +17,12 @@ class TaskViewSet(
     serializer_class = TaskSerializer
     queryset = Task.objects.all()
     permission_classes = (IsAuthenticated, TaskPermission)
+    http_method_names = [
+        'get',
+        'post',
+        'put',
+        'delete',
+    ]
 
     def list(self, request, *args, **kwargs):
         queryset = Task.objects.filter(user=request.user)

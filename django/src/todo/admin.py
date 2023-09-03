@@ -39,6 +39,7 @@ class TaskAdmin(admin.ModelAdmin):
                     'category',
                     'show_status',
                     'content',
+                    'file',
                 ],
             },
         ],

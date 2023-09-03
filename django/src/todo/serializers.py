@@ -1,4 +1,3 @@
-from rest_framework import permissions
 from rest_framework.fields import HiddenField, CurrentUserDefault
 from rest_framework.permissions import BasePermissionMetaclass
 from rest_framework.serializers import ModelSerializer
@@ -12,8 +11,6 @@ class TaskPermission(metaclass=BasePermissionMetaclass):
         return not request.user.is_anonymous
 
     def has_object_permission(self, request, view, obj):
-        if request.method in permissions.SAFE_METHODS:
-            return True
         return obj.user == request.user
 
 
@@ -23,9 +20,11 @@ class TaskSerializer(ModelSerializer):
     class Meta:
         model = Task
         fields = [
+            'id',
             'title',
             'category',
             'content',
+            'file',
             'created_at',
             'done_at',
             'complete_due',
