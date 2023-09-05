@@ -44,6 +44,8 @@ INSTALLED_APPS = [
 
     'rest_framework',
     'rest_framework_swagger',
+    'mptt',
+    'django_mptt_admin',
 
     'todo',
 ]

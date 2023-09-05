@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.db.models import QuerySet
 from django.utils.timezone import now
+from mptt.models import MPTTModel, TreeForeignKey
 
 
 class Category(models.Model):
@@ -33,7 +34,7 @@ class TaskQuerySet(QuerySet):
         return self.filter(pk__in=tasks_by_status[status])
 
 
-class Task(models.Model):
+class Task(MPTTModel):
     class Status(NamedTuple):
         value: str
         verbose_name: str
@@ -43,6 +44,12 @@ class Task(models.Model):
         'done': Status('done', 'Выполнено'),
         'active': Status('active', 'В работе'),
     }
+
+    PRIORITY_CHOICES = [
+        ("LOW", "Низкий"),
+        ("MID", "Средний"),
+        ("HIGH", "Высокий"),
+    ]
 
     title = models.CharField(
         'Название',
@@ -74,6 +81,12 @@ class Task(models.Model):
         null=True,
         blank=True,
     )
+    priority = models.CharField(
+        'Приоритет',
+        max_length=16,
+        choices=PRIORITY_CHOICES,
+        default='MID'
+    )
     file = models.FileField(
         'Файл',
         upload_to='media/',
@@ -86,6 +99,14 @@ class Task(models.Model):
         verbose_name='Пользователь',
         related_name='tasks',
     )
+    parent = TreeForeignKey(
+        'self',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='children',
+    )
+
     objects = TaskQuerySet.as_manager()
 
     def __str__(self):

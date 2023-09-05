@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django_mptt_admin.admin import DjangoMpttAdmin
 
 from .models import Task, Category, TaskQuerySet
 
@@ -18,7 +19,7 @@ class ToDoStatusFilter(admin.SimpleListFilter):
 
 
 @admin.register(Task)
-class TaskAdmin(admin.ModelAdmin):
+class TaskAdmin(DjangoMpttAdmin):
     list_display = [
         'title',
         'category',
@@ -57,6 +58,7 @@ class TaskAdmin(admin.ModelAdmin):
 
     list_filter = [
         'category',
+        'priority',
         ToDoStatusFilter,
     ]
 
