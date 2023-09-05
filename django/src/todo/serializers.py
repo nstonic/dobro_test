@@ -22,7 +22,9 @@ class TaskSerializer(ModelSerializer):
         fields = [
             'id',
             'title',
+            'parent',
             'category',
+            'priority',
             'content',
             'file',
             'created_at',

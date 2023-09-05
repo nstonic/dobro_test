@@ -329,7 +329,18 @@ CREATE TABLE public.todo_task (
     done_at timestamp with time zone,
     category_id bigint,
     complete_due timestamp with time zone,
-    user_id integer NOT NULL
+    user_id integer NOT NULL,
+    file character varying(100),
+    level integer NOT NULL,
+    lft integer NOT NULL,
+    parent_id bigint,
+    priority character varying(16) NOT NULL,
+    rght integer NOT NULL,
+    tree_id integer NOT NULL,
+    CONSTRAINT todo_task_level_check CHECK ((level >= 0)),
+    CONSTRAINT todo_task_lft_check CHECK ((lft >= 0)),
+    CONSTRAINT todo_task_rght_check CHECK ((rght >= 0)),
+    CONSTRAINT todo_task_tree_id_check CHECK ((tree_id >= 0))
 );
 
 
@@ -394,14 +405,14 @@ COPY public.auth_permission (id, name, content_type_id, codename) FROM stdin;
 22	Can change session	6	change_session
 23	Can delete session	6	delete_session
 24	Can view session	6	view_session
-25	Can add Категория	7	add_category
-26	Can change Категория	7	change_category
-27	Can delete Категория	7	delete_category
-28	Can view Категория	7	view_category
-29	Can add Задание	8	add_task
-30	Can change Задание	8	change_task
-31	Can delete Задание	8	delete_task
-32	Can view Задание	8	view_task
+25	Can add category	7	add_category
+26	Can change category	7	change_category
+27	Can delete category	7	delete_category
+28	Can view category	7	view_category
+29	Can add task	8	add_task
+30	Can change task	8	change_task
+31	Can delete task	8	delete_task
+32	Can view task	8	view_task
 \.
 
 
@@ -410,9 +421,9 @@ COPY public.auth_permission (id, name, content_type_id, codename) FROM stdin;
 --
 
 COPY public.auth_user (id, password, last_login, is_superuser, username, first_name, last_name, email, is_staff, is_active, date_joined) FROM stdin;
-3	pbkdf2_sha256$600000$Rnj0yPSpBTnlghqRgAnTAn$OfhMMA3wJ0PnGhlmFLiQvE+kTc2zzLE2AGRKpj5ixWU=	\N	f	user2				f	t	2023-09-02 11:51:57+00
-2	pbkdf2_sha256$600000$63XmS51X4KNRUfswDKi8mJ$Yfmo/Oj2G02GafEX1/za6Aprt17w3FIOU1QenYWhq6c=	2023-09-02 13:36:11.389283+00	f	user1				f	t	2023-09-02 11:51:14+00
-1	pbkdf2_sha256$600000$NwfiSwVEBJsmxwNrI08CQk$sn5l+2ee6qixAV5vlXB6E3Bm6Gz5YWHKUFAF68iCTak=	2023-09-02 13:36:43.341584+00	t	admin				t	t	2023-09-02 11:30:32.070575+00
+3	pbkdf2_sha256$600000$eKbkmt2OP7FaMZQMzvrvuL$uFYLPFFzpARQz5zxKGohLadqZoeu1j8eXnXQxiXiLOU=	\N	f	user2				f	t	2023-09-05 18:16:46.737036+00
+2	pbkdf2_sha256$600000$C1wo6oliuIucigrCNXyNA0$ikogBTnyUSPtTClgpMQTze4zG2a8PUggd1fFExc0QH8=	2023-09-05 18:44:51.289691+00	f	user1				f	t	2023-09-05 18:16:33.248719+00
+1	pbkdf2_sha256$600000$F6nHt9dYPgve3DoBeMM8ju$Ue4eD/BR3aBR1plzBT+h9TCUcfKQGIwWZf8C+COEIhU=	2023-09-05 18:56:57.478775+00	t	admin				t	t	2023-09-05 11:26:15.248812+00
 \.
 
 
@@ -453,22 +464,23 @@ COPY public.auth_user_user_permissions (id, user_id, permission_id) FROM stdin;
 --
 
 COPY public.django_admin_log (id, action_time, object_id, object_repr, action_flag, change_message, content_type_id, user_id) FROM stdin;
-1	2023-09-02 11:51:15.092141+00	2	user1	1	[{"added": {}}]	4	1
-2	2023-09-02 11:51:22.751287+00	2	user1	2	[]	4	1
-3	2023-09-02 11:51:42.199039+00	2	user1	2	[{"changed": {"fields": ["User permissions"]}}]	4	1
-4	2023-09-02 11:51:58.183735+00	3	user2	1	[{"added": {}}]	4	1
-5	2023-09-02 11:52:06.041915+00	3	user2	2	[{"changed": {"fields": ["User permissions"]}}]	4	1
-6	2023-09-02 11:56:56.09185+00	4	Покупки	3		7	1
-7	2023-09-02 11:56:56.094195+00	3	Цвет	3		7	1
-8	2023-09-02 11:56:56.095825+00	2	Цвет	3		7	1
-9	2023-09-02 11:57:59.591763+00	1	Купить хлеба	2	[{"changed": {"fields": ["\\u041f\\u043e\\u043b\\u044c\\u0437\\u043e\\u0432\\u0430\\u0442\\u0435\\u043b\\u044c"]}}]	8	1
-10	2023-09-02 13:37:00.166676+00	6	Малибу	2	[{"changed": {"fields": ["\\u041d\\u0430\\u0437\\u0432\\u0430\\u043d\\u0438\\u0435"]}}]	8	1
-11	2023-09-02 13:37:07.393389+00	5	Купить машину	2	[{"changed": {"fields": ["\\u041d\\u0430\\u0437\\u0432\\u0430\\u043d\\u0438\\u0435"]}}]	8	1
-12	2023-09-02 13:37:27.377301+00	2	Купить велосипед	2	[{"changed": {"fields": ["\\u041d\\u0430\\u0437\\u0432\\u0430\\u043d\\u0438\\u0435", "\\u0421\\u043e\\u0434\\u0435\\u0440\\u0436\\u0438\\u043c\\u043e\\u0435"]}}]	8	1
-13	2023-09-02 13:37:47.241258+00	5	Купить машину	2	[{"changed": {"fields": ["\\u0421\\u043e\\u0434\\u0435\\u0440\\u0436\\u0438\\u043c\\u043e\\u0435"]}}]	8	1
-14	2023-09-02 13:37:59.019771+00	2	Купить велосипед	2	[{"changed": {"fields": ["\\u0421\\u0434\\u0435\\u043b\\u0430\\u043d\\u043e"]}}]	8	1
-15	2023-09-02 13:38:08.162949+00	6	Малибу	2	[{"changed": {"fields": ["\\u0421\\u0434\\u0435\\u043b\\u0430\\u0442\\u044c \\u0434\\u043e"]}}]	8	1
-16	2023-09-02 14:10:00.580563+00	7	Подарок	1	[{"added": {}}]	8	1
+1	2023-09-05 11:27:50.131542+00	1	Покупки	1	[{"added": {}}]	7	1
+2	2023-09-05 11:28:17.357738+00	1	Машина	1	[{"added": {}}]	8	1
+3	2023-09-05 11:28:50.343242+00	2	Резина	1	[{"added": {}}]	8	1
+4	2023-09-05 15:57:28.918287+00	1	Машина	2	[{"changed": {"fields": ["\\u041f\\u0440\\u0438\\u043e\\u0440\\u0438\\u0442\\u0435\\u0442"]}}]	8	1
+5	2023-09-05 17:35:59.992513+00	2	Резина	2	[{"changed": {"fields": ["\\u0421\\u0434\\u0435\\u043b\\u0430\\u043d\\u043e"]}}]	8	1
+6	2023-09-05 17:43:51.872653+00	2	Резина	2	[{"changed": {"fields": ["\\u0421\\u0434\\u0435\\u043b\\u0430\\u043d\\u043e"]}}]	8	1
+7	2023-09-05 17:45:27.673652+00	2	Резина	2	[]	8	1
+8	2023-09-05 18:16:33.581564+00	2	user1	1	[{"added": {}}]	4	1
+9	2023-09-05 18:16:47.065377+00	3	user2	1	[{"added": {}}]	4	1
+10	2023-09-05 18:17:17.472601+00	2	Дела	1	[{"added": {}}]	7	1
+11	2023-09-05 18:17:33.081102+00	3	Переобуться	1	[{"added": {}}]	8	1
+12	2023-09-05 18:18:00.266189+00	3	Досуг	1	[{"added": {}}]	7	1
+13	2023-09-05 18:18:27.984164+00	4	Отпуск	1	[{"added": {}}]	8	1
+14	2023-09-05 18:40:56.95885+00	5	Мальдивы	1	[{"added": {}}]	8	1
+15	2023-09-05 18:41:15.664048+00	6	Накопить денег	1	[{"added": {}}]	8	1
+16	2023-09-05 18:41:38.003409+00	7	Купить путевку	1	[{"added": {}}]	8	1
+17	2023-09-05 18:57:09.653393+00	8	string (В работе) пользователь: user1	3		8	1
 \.
 
 
@@ -493,28 +505,31 @@ COPY public.django_content_type (id, app_label, model) FROM stdin;
 --
 
 COPY public.django_migrations (id, app, name, applied) FROM stdin;
-1	contenttypes	0001_initial	2023-09-02 11:30:16.663075+00
-2	auth	0001_initial	2023-09-02 11:30:16.771915+00
-3	admin	0001_initial	2023-09-02 11:30:16.80463+00
-4	admin	0002_logentry_remove_auto_add	2023-09-02 11:30:16.815424+00
-5	admin	0003_logentry_add_action_flag_choices	2023-09-02 11:30:16.825359+00
-6	contenttypes	0002_remove_content_type_name	2023-09-02 11:30:16.842011+00
-7	auth	0002_alter_permission_name_max_length	2023-09-02 11:30:16.851293+00
-8	auth	0003_alter_user_email_max_length	2023-09-02 11:30:16.860488+00
-9	auth	0004_alter_user_username_opts	2023-09-02 11:30:16.872852+00
-10	auth	0005_alter_user_last_login_null	2023-09-02 11:30:16.882417+00
-11	auth	0006_require_contenttypes_0002	2023-09-02 11:30:16.885838+00
-12	auth	0007_alter_validators_add_error_messages	2023-09-02 11:30:16.895659+00
-13	auth	0008_alter_user_username_max_length	2023-09-02 11:30:16.909839+00
-14	auth	0009_alter_user_last_name_max_length	2023-09-02 11:30:16.918436+00
-15	auth	0010_alter_group_name_max_length	2023-09-02 11:30:16.929299+00
-16	auth	0011_update_proxy_permissions	2023-09-02 11:30:16.939171+00
-17	auth	0012_alter_user_first_name_max_length	2023-09-02 11:30:16.947879+00
-18	sessions	0001_initial	2023-09-02 11:30:16.973347+00
-19	todo	0001_initial	2023-09-02 11:30:16.991792+00
-20	todo	0002_alter_category_options_alter_task_options	2023-09-02 11:30:16.998575+00
-21	todo	0003_task_complete_due	2023-09-02 11:30:17.004055+00
-22	todo	0004_task_user	2023-09-02 11:30:17.019411+00
+1	contenttypes	0001_initial	2023-09-05 11:21:29.152248+00
+2	auth	0001_initial	2023-09-05 11:21:29.535282+00
+3	admin	0001_initial	2023-09-05 11:21:29.595066+00
+4	admin	0002_logentry_remove_auto_add	2023-09-05 11:21:29.614062+00
+5	admin	0003_logentry_add_action_flag_choices	2023-09-05 11:21:29.62591+00
+6	contenttypes	0002_remove_content_type_name	2023-09-05 11:21:29.648194+00
+7	auth	0002_alter_permission_name_max_length	2023-09-05 11:21:29.663247+00
+8	auth	0003_alter_user_email_max_length	2023-09-05 11:21:29.673318+00
+9	auth	0004_alter_user_username_opts	2023-09-05 11:21:29.681055+00
+10	auth	0005_alter_user_last_login_null	2023-09-05 11:21:29.688704+00
+11	auth	0006_require_contenttypes_0002	2023-09-05 11:21:29.692066+00
+12	auth	0007_alter_validators_add_error_messages	2023-09-05 11:21:29.700632+00
+13	auth	0008_alter_user_username_max_length	2023-09-05 11:21:29.712564+00
+14	auth	0009_alter_user_last_name_max_length	2023-09-05 11:21:29.720203+00
+15	auth	0010_alter_group_name_max_length	2023-09-05 11:21:29.729769+00
+16	auth	0011_update_proxy_permissions	2023-09-05 11:21:29.736849+00
+17	auth	0012_alter_user_first_name_max_length	2023-09-05 11:21:29.746242+00
+18	sessions	0001_initial	2023-09-05 11:21:29.761135+00
+19	todo	0001_initial	2023-09-05 11:21:29.779017+00
+20	todo	0002_alter_category_options_alter_task_options	2023-09-05 11:25:35.068934+00
+21	todo	0003_task_complete_due	2023-09-05 11:25:35.07389+00
+22	todo	0004_task_user	2023-09-05 11:25:35.08747+00
+23	todo	0005_task_file	2023-09-05 11:25:35.09647+00
+24	todo	0006_task_level_task_lft_task_parent_task_priority_and_more	2023-09-05 11:25:35.143811+00
+25	todo	0007_alter_task_parent	2023-09-05 16:44:10.313403+00
 \.
 
 
@@ -523,6 +538,7 @@ COPY public.django_migrations (id, app, name, applied) FROM stdin;
 --
 
 COPY public.django_session (session_key, session_data, expire_date) FROM stdin;
+ficlp00vfz3qqnxso2m8cetpiyaag57t	.eJxVjDsOwjAQBe_iGlm2swSHkp4zRPszDiBbipMKcXeIlALaNzPvZUZclzyuTedxEnM23hx-N0J-aNmA3LHcquValnkiuyl2p81eq-jzsrt_Bxlb_tbMSsl7pegYT9EPoACiATEcCRgk0dAnHGJgl7QXEeoAO0fgU48xmPcHHtc5QA:1qdbEP:ipGJgCQwwxF7exdUVXEY4G0PxL2Xbq0n3vBifloHlS0	2023-09-19 18:56:57.482312+00
 rvc9uxl3ltf4xpdtn5dsbx1gqnz8gzmn	.eJxVjMsOwiAQRf-FtSHATHm4dO83EBhAqgaS0q6M_65NutDtPefcF_NhW6vfRl78nNiZSXb63WKgR247SPfQbp1Tb-syR74r_KCDX3vKz8vh_h3UMOq3pmgQ3KQkYZCyaC1KsqiETqUoZ0BNVlAQYFxUBMJAkRHRWYQSURtk7w_A7Taw:1qcQnr:1_x6WbkVz1eShZQsk2n__XniViHTchk25rO60XMXHfw	2023-09-16 13:36:43.34382+00
 \.
 
@@ -533,7 +549,9 @@ rvc9uxl3ltf4xpdtn5dsbx1gqnz8gzmn	.eJxVjMsOwiAQRf-FtSHATHm4dO83EBhAqgaS0q6M_65Nut
 
 COPY public.todo_category (id, name) FROM stdin;
 1	Покупки
-5	Поездки
+2	Дела
+3	Досуг
+4	Здоровье
 \.
 
 
@@ -541,11 +559,14 @@ COPY public.todo_category (id, name) FROM stdin;
 -- Data for Name: todo_task; Type: TABLE DATA; Schema: public; Owner: dobro
 --
 
-COPY public.todo_task (id, title, content, created_at, done_at, category_id, complete_due, user_id) FROM stdin;
-5	Купить машину	Ferrary	2023-09-02 12:08:16.587849+00	\N	1	\N	2
-2	Купить велосипед	спортивный	2023-09-02 11:59:40.926235+00	2023-09-02 13:37:58+00	1	\N	2
-6	Малибу	Съездить отдохнуть	2023-09-02 12:08:51.462133+00	\N	5	2023-09-01 12:08:00+00	2
-7	Подарок	Купить подарок жене на ДР	2023-09-02 14:10:00.578935+00	\N	1	2023-09-03 14:00:00+00	3
+COPY public.todo_task (id, title, content, created_at, done_at, category_id, complete_due, user_id, file, level, lft, parent_id, priority, rght, tree_id) FROM stdin;
+6	Накопить денег		2023-09-05 18:41:15.663274+00	\N	2	\N	2		2	3	5	MID	4	3
+4	Отпуск	Съездить в Европу	2023-09-05 18:18:27.983283+00	\N	3	2023-10-04 20:00:00+00	2		0	1	\N	HIGH	8	3
+5	Мальдивы	Потусить	2023-09-05 18:40:56.957902+00	\N	3	\N	2		1	2	4	MID	7	3
+7	Купить путевку		2023-09-05 18:41:38.00232+00	\N	\N	\N	2		2	5	5	MID	6	3
+3	Переобуться		2023-09-05 18:17:33.080214+00	\N	2	2023-11-04 20:00:00+00	1		2	3	2	HIGH	4	1
+1	Машина	Купить Бентли	2023-09-05 11:28:17.356768+00	\N	1	2023-10-04 20:00:00+00	1		0	1	\N	LOW	6	1
+2	Резина	Купить летнюю резину	2023-09-05 11:28:50.342399+00	2023-10-05 17:35:56+00	1	2023-11-04 20:00:00+00	1		1	2	1	MID	5	1
 \.
 
 
@@ -877,6 +898,20 @@ CREATE INDEX todo_task_category_id_fb0c0926 ON public.todo_task USING btree (cat
 
 
 --
+-- Name: todo_task_parent_id_929b3e3b; Type: INDEX; Schema: public; Owner: dobro
+--
+
+CREATE INDEX todo_task_parent_id_929b3e3b ON public.todo_task USING btree (parent_id);
+
+
+--
+-- Name: todo_task_tree_id_0f19ac23; Type: INDEX; Schema: public; Owner: dobro
+--
+
+CREATE INDEX todo_task_tree_id_0f19ac23 ON public.todo_task USING btree (tree_id);
+
+
+--
 -- Name: todo_task_user_id_69f329a5; Type: INDEX; Schema: public; Owner: dobro
 --
 
@@ -961,6 +996,14 @@ ALTER TABLE ONLY public.django_admin_log
 
 ALTER TABLE ONLY public.todo_task
     ADD CONSTRAINT todo_task_category_id_fb0c0926_fk_todo_category_id FOREIGN KEY (category_id) REFERENCES public.todo_category(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: todo_task todo_task_parent_id_929b3e3b_fk_todo_task_id; Type: FK CONSTRAINT; Schema: public; Owner: dobro
+--
+
+ALTER TABLE ONLY public.todo_task
+    ADD CONSTRAINT todo_task_parent_id_929b3e3b_fk_todo_task_id FOREIGN KEY (parent_id) REFERENCES public.todo_task(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --

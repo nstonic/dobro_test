@@ -1,5 +1,8 @@
+from copy import deepcopy
+
 from django.contrib import admin
-from django_mptt_admin.admin import DjangoMpttAdmin
+from django.contrib.auth.models import User
+from django_mptt_admin.admin import FilterableDjangoMpttAdmin
 
 from .models import Task, Category, TaskQuerySet
 
@@ -19,7 +22,7 @@ class ToDoStatusFilter(admin.SimpleListFilter):
 
 
 @admin.register(Task)
-class TaskAdmin(DjangoMpttAdmin):
+class TaskAdmin(FilterableDjangoMpttAdmin):
     list_display = [
         'title',
         'category',
@@ -37,6 +40,8 @@ class TaskAdmin(DjangoMpttAdmin):
                 'fields': [
                     'user',
                     'title',
+                    'parent',
+                    'priority',
                     'category',
                     'show_status',
                     'content',
@@ -67,3 +72,17 @@ class TaskAdmin(DjangoMpttAdmin):
         return status.verbose_name
 
     show_status.short_description = 'Статус'
+
+    def save_form(self, request, form, change):
+        obj = form.save(commit=False)
+        if obj.parent:
+            obj.user = obj.parent.user
+        return form.save(commit=False)
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        parent_task_pk = request.GET.get('insert_at')
+        if not obj and parent_task_pk:
+            if parent_task := Task.objects.filter(pk=parent_task_pk):
+                form.base_fields['user'].initial = parent_task.first().user
+        return form

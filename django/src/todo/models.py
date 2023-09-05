@@ -1,3 +1,4 @@
+from statistics import mean
 from typing import NamedTuple
 
 from django.contrib.auth.models import User
@@ -32,6 +33,30 @@ class TaskQuerySet(QuerySet):
             tasks_by_status[task_status.value].append(task.pk)
 
         return self.filter(pk__in=tasks_by_status[status])
+
+    def get_stat(self):
+        done_tasks = self.filter_by_status(Task.STATUSES['done'].value)
+        active_tasks = self.filter_by_status(Task.STATUSES['active'].value)
+        expired_tasks = self.filter_by_status(Task.STATUSES['expired'].value)
+        overdue_tasks = [
+            task
+            for task in self
+            if task.done_at and task.done_at > task.complete_due
+        ]
+        avg_complete_hours = mean([
+            (task.done_at.timestamp() - task.created_at.timestamp()) / 3600
+            for task in self
+            if task.done_at
+        ] or [0])
+        overdue_percent = 100 * (len(overdue_tasks) + expired_tasks.count()) / self.count() if self.count() else 0
+        return {
+            'total_tasks_amount': self.count(),
+            'done_tasks_amount': done_tasks.count(),
+            'active_tasks_amount': active_tasks.count(),
+            'expired_tasks_amount': expired_tasks.count(),
+            'avg_complete_hours': avg_complete_hours,
+            'overdue_percent': overdue_percent,
+        }
 
 
 class Task(MPTTModel):
@@ -105,17 +130,21 @@ class Task(MPTTModel):
         null=True,
         blank=True,
         related_name='children',
+        verbose_name='Вложено в',
     )
 
     objects = TaskQuerySet.as_manager()
 
     def __str__(self):
-        return self.title
+        return f'{self.title} ({self.get_task_status().verbose_name}) пользователь: {self.user}'
 
     class Meta:
         verbose_name = 'Задание'
         verbose_name_plural = 'Задания'
         ordering = ['-created_at']
+
+    class MPTTMeta:
+        order_insertion_by = ['created_at']
 
     def get_task_status(self) -> Status:
         match self:
