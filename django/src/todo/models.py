@@ -54,8 +54,8 @@ class TaskQuerySet(QuerySet):
             'done_tasks_amount': done_tasks.count(),
             'active_tasks_amount': active_tasks.count(),
             'expired_tasks_amount': expired_tasks.count(),
-            'avg_complete_hours': avg_complete_hours,
-            'overdue_percent': overdue_percent,
+            'avg_complete_hours': round(avg_complete_hours, 0),
+            'overdue_percent': round(overdue_percent, 1)
         }
 
 

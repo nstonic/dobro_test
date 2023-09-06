@@ -52,6 +52,7 @@ class CategoryViewSet(
 ):
     serializer_class = CategorySerializer
     queryset = Category.objects.all()
+    permission_classes = (IsAuthenticated,)
 
     @action(methods=['get'], detail=True)
     def tasks(self, request, pk: int):
