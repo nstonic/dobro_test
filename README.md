@@ -42,7 +42,7 @@ $ docker compose exec postgres psql -U dobro -f /test_data/postgres.sql
 
 Запуск тестов:
 ```shell
-docker compose run --rm django python manage.py test
+$ docker compose run --rm django python manage.py test
 ```
 
 ## Как использовать
