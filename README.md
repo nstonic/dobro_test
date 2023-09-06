@@ -40,6 +40,11 @@ $ docker compose up
 $ docker compose exec postgres psql -U dobro -f /test_data/postgres.sql
 ```
 
+Запуск тестов:
+```shell
+docker compose run --rm django python manage.py test
+```
+
 ## Как использовать
 
 Все эндпойнты доступны по адресу [127.0.0.1:8000](http://127.0.0.1:8000) \
